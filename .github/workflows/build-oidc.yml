@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - preview
+      - preview-v2
   workflow_dispatch:
 
 concurrency:
@@ -34,7 +35,7 @@ jobs:
           context: ./apps/api
           file: ./apps/api/Dockerfile.api
           push: true
-          tags: ghcr.io/jiyang1018/plane-backend-oidc:preview
+          tags: ghcr.io/jiyang1018/plane-backend-oidc:${{ github.ref_name }}
           no-cache: true
 
   build-web:
@@ -60,7 +61,7 @@ jobs:
           context: .
           file: ./apps/web/Dockerfile.web
           push: true
-          tags: ghcr.io/jiyang1018/plane-web-oidc:preview
+          tags: ghcr.io/jiyang1018/plane-web-oidc:${{ github.ref_name }}
           no-cache: true
 
   build-admin:
@@ -86,7 +87,7 @@ jobs:
           context: .
           file: ./apps/admin/Dockerfile.admin
           push: true
-          tags: ghcr.io/jiyang1018/plane-admin-oidc:preview
+          tags: ghcr.io/jiyang1018/plane-admin-oidc:${{ github.ref_name }}
           no-cache: true
 
   build-space:
@@ -112,7 +113,7 @@ jobs:
           context: .
           file: ./apps/space/Dockerfile.space
           push: true
-          tags: ghcr.io/jiyang1018/plane-space-oidc:preview
+          tags: ghcr.io/jiyang1018/plane-space-oidc:${{ github.ref_name }}
           no-cache: true
 
   build-live:
@@ -138,5 +139,5 @@ jobs:
           context: .
           file: ./apps/live/Dockerfile.live
           push: true
-          tags: ghcr.io/jiyang1018/plane-live-oidc:preview
+          tags: ghcr.io/jiyang1018/plane-live-oidc:${{ github.ref_name }}
           no-cache: true
