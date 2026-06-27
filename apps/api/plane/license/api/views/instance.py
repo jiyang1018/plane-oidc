@@ -55,6 +55,11 @@ class InstanceEndpoint(BaseAPIView):
             GITHUB_APP_NAME,
             IS_GITLAB_ENABLED,
             IS_GITEA_ENABLED,
+            IS_OIDC_ENABLED,
+            OIDC_ICON_URL,
+            OIDC_DISPLAY_NAME,
+            DEFAULT_WORKSPACE_SLUGS,
+            DEFAULT_USER_ROLE,
             EMAIL_HOST,
             ENABLE_MAGIC_LINK_LOGIN,
             ENABLE_EMAIL_PASSWORD,
@@ -92,6 +97,26 @@ class InstanceEndpoint(BaseAPIView):
                 {
                     "key": "IS_GITEA_ENABLED",
                     "default": os.environ.get("IS_GITEA_ENABLED", "0"),
+                },
+                {
+                    "key": "IS_OIDC_ENABLED",
+                    "default": os.environ.get("IS_OIDC_ENABLED", "0"),
+                },
+                {
+                    "key": "OIDC_ICON_URL",
+                    "default": os.environ.get("OIDC_ICON_URL", ""),
+                },
+                {
+                    "key": "OIDC_DISPLAY_NAME",
+                    "default": os.environ.get("OIDC_DISPLAY_NAME", "SSO"),
+                },
+                {
+                    "key": "DEFAULT_WORKSPACE_SLUGS",
+                    "default": os.environ.get("DEFAULT_WORKSPACE_SLUGS", ""),
+                },
+                {
+                    "key": "DEFAULT_USER_ROLE",
+                    "default": os.environ.get("DEFAULT_USER_ROLE", ""),
                 },
                 {"key": "EMAIL_HOST", "default": os.environ.get("EMAIL_HOST", "")},
                 {
@@ -133,6 +158,12 @@ class InstanceEndpoint(BaseAPIView):
         data["is_github_enabled"] = IS_GITHUB_ENABLED == "1"
         data["is_gitlab_enabled"] = IS_GITLAB_ENABLED == "1"
         data["is_gitea_enabled"] = IS_GITEA_ENABLED == "1"
+        data["is_oidc_enabled"] = IS_OIDC_ENABLED == "1"
+        data["oidc_icon_url"] = OIDC_ICON_URL or ""
+        data["oidc_display_name"] = OIDC_DISPLAY_NAME or "SSO"
+        data["default_workspace_slugs"] = DEFAULT_WORKSPACE_SLUGS or ""
+        data["default_user_role"] = DEFAULT_USER_ROLE or ""
+        data["oidc_display_name"] = OIDC_DISPLAY_NAME or "SSO"
         data["is_magic_login_enabled"] = ENABLE_MAGIC_LINK_LOGIN == "1"
         data["is_email_password_enabled"] = ENABLE_EMAIL_PASSWORD == "1"
 
@@ -196,4 +227,31 @@ class SignUpScreenVisitedEndpoint(BaseAPIView):
             )
         instance.is_signup_screen_visited = True
         instance.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+class InstanceUsersEndpoint(BaseAPIView):
+    permission_classes = [InstanceAdminPermission]
+
+    def get(self, request):
+        from plane.db.models import User
+        users = User.objects.all().order_by("-date_joined").values(
+            "id", "email", "first_name", "last_name", 
+            "is_active", "date_joined", "last_login"
+        )
+        return Response({"results": list(users)}, status=status.HTTP_200_OK)
+
+    def patch(self, request, pk):
+        from plane.db.models import User
+        user = User.objects.get(pk=pk)
+        user.is_active = request.data.get("is_active", user.is_active)
+        user.save()
+        return Response({"id": str(user.id), "is_active": user.is_active}, status=status.HTTP_200_OK)
+
+    def delete(self, request, pk):
+        from plane.db.models import User
+        from django.db import connection
+        user = User.objects.get(pk=pk)
+        with connection.cursor() as cursor:
+            cursor.execute("SET session_replication_role = replica")
+            user.delete()
+            cursor.execute("SET session_replication_role = DEFAULT")
         return Response(status=status.HTTP_204_NO_CONTENT)

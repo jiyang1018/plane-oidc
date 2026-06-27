@@ -13,6 +13,18 @@ authentication_config_variables = [
         "is_encrypted": False,
     },
     {
+        "key": "DEFAULT_WORKSPACE_SLUGS",
+        "value": os.environ.get("DEFAULT_WORKSPACE_SLUGS", ""),
+        "category": "AUTHENTICATION",
+        "is_encrypted": False,
+    },
+    {
+        "key": "DEFAULT_USER_ROLE",
+        "value": os.environ.get("DEFAULT_USER_ROLE", ""),
+        "category": "AUTHENTICATION",
+        "is_encrypted": False,
+    },
+    {
         "key": "ENABLE_EMAIL_PASSWORD",
         "value": os.environ.get("ENABLE_EMAIL_PASSWORD", "1"),
         "category": "AUTHENTICATION",
@@ -111,6 +123,44 @@ gitlab_config_variables = [
     },
 ]
 
+oidc_config_variables = [
+    {
+        "key": "IS_OIDC_ENABLED",
+        "value": os.environ.get("IS_OIDC_ENABLED", "0"),
+        "category": "OIDC",
+        "is_encrypted": False,
+    },
+    {
+        "key": "OIDC_CLIENT_ID",
+        "value": os.environ.get("OIDC_CLIENT_ID"),
+        "category": "OIDC",
+        "is_encrypted": False,
+    },
+    {
+        "key": "OIDC_CLIENT_SECRET",
+        "value": os.environ.get("OIDC_CLIENT_SECRET"),
+        "category": "OIDC",
+        "is_encrypted": True,
+    },
+    {
+        "key": "OIDC_DISCOVERY_URL",
+        "value": os.environ.get("OIDC_DISCOVERY_URL"),
+        "category": "OIDC",
+        "is_encrypted": False,
+    },
+    {
+        "key": "OIDC_DISPLAY_NAME",
+        "value": os.environ.get("OIDC_DISPLAY_NAME", "SSO"),
+        "category": "OIDC",
+        "is_encrypted": False,
+    },
+    {
+        "key": "OIDC_ICON_URL",
+        "value": os.environ.get("OIDC_ICON_URL", ""),
+        "category": "OIDC",
+        "is_encrypted": False,
+    },
+]
 gitea_config_variables = [
     {
         "key": "IS_GITEA_ENABLED",
@@ -239,6 +289,7 @@ core_config_variables = [
     *github_config_variables,
     *gitlab_config_variables,
     *gitea_config_variables,
+    *oidc_config_variables,
     *smtp_config_variables,
     *llm_config_variables,
     *unsplash_config_variables,

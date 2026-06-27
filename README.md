@@ -14,152 +14,87 @@
     <a href="https://docs.plane.so/"><b>Documentation</b></a>
 </p>
 
-<p>
-    <a href="https://app.plane.so/#gh-light-mode-only" target="_blank">
-      <img
-        src="https://media.docs.plane.so/GitHub-readme/github-top.webp"
-        alt="Plane Screens"
-        width="100%"
-      />
-    </a>
-</p>
+> This is a fork of [makeplane/plane](https://github.com/makeplane/plane) with OIDC/SSO support added to the Community Edition. For general Plane documentation, see the [official docs](https://docs.plane.so/).
 
-Meet [Plane](https://plane.so/), an open-source project management tool to track issues, run ~sprints~ cycles, and manage product roadmaps without the chaos of managing the tool itself. 🧘‍♀️
+## 🔐 What's different in this fork
 
-> Plane is evolving every day. Your suggestions, ideas, and reported bugs help us immensely. Do not hesitate to join in the conversation on [Forum](https://forum.plane.so) or raise a GitHub issue. We read everything and respond to most.
+### OIDC / SSO Authentication
+Plane Community Edition does not support OIDC/SSO. This fork adds it.
 
-## 🚀 Installation
+- OIDC login button on the login page (configurable display name and icon)
+- OIDC configuration page in God Mode (`/god-mode/authentication/oidc/`)
+- OIDC users bypass the signup restriction — existing accounts log in normally, new accounts are created automatically
+- Works with any OIDC-compliant provider: Authentik, Keycloak, Nextcloud, Azure AD, etc.
 
-Getting started with Plane is simple. Choose the setup that works best for you:
+### God Mode enhancements
+- **Members page** (`/god-mode/members/`) — list all users, activate/deactivate/delete
+- **Auto Assign workspaces** — in the Workspaces page, check which workspaces new OIDC users are automatically added to (supports multiple). Only visible when "Prevent workspace creation" is enabled.
 
-- **Plane Cloud**
-  Sign up for a free account on [Plane Cloud](https://app.plane.so)—it's the fastest way to get up and running without worrying about infrastructure.
+---
 
-- **Self-host Plane**
-  Prefer full control over your data and infrastructure? Install and run Plane on your own servers. Follow our detailed [deployment guides](https://developers.plane.so/self-hosting/overview) to get started.
+## 🐳 Docker images
 
-| Installation methods | Docs link                                                                                                                                                                               |
-| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Docker               | [![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)](https://developers.plane.so/self-hosting/methods/docker-compose)         |
-| Kubernetes           | [![Kubernetes](https://img.shields.io/badge/kubernetes-%23326ce5.svg?style=for-the-badge&logo=kubernetes&logoColor=white)](https://developers.plane.so/self-hosting/methods/kubernetes) |
+Pre-built images on GitHub Container Registry, updated on every push to `preview`:
 
-`Instance admins` can configure instance settings with [God mode](https://developers.plane.so/self-hosting/govern/instance-admin).
+| Service | Image |
+|---|---|
+| Backend | `ghcr.io/jiyang1018/plane-backend-oidc:preview` |
+| Web | `ghcr.io/jiyang1018/plane-web-oidc:preview` |
+| Admin | `ghcr.io/jiyang1018/plane-admin-oidc:preview` |
+| Space | `ghcr.io/jiyang1018/plane-space-oidc:preview` |
+| Live | `ghcr.io/jiyang1018/plane-live-oidc:preview` |
 
-## 🌟 Features
+Use the official `makeplane` images for `proxy`, `db`, `redis`, `minio`, and `mq` — they are unchanged.
 
-- **Work Items**
-  Efficiently create and manage tasks with a robust rich text editor that supports file uploads. Enhance organization and tracking by adding sub-properties and referencing related issues.
+---
 
-- **Cycles**
-  Maintain your team’s momentum with Cycles. Track progress effortlessly using burn-down charts and other insightful tools.
+## 🚀 Setup
 
-- **Modules**
-  Simplify complex projects by dividing them into smaller, manageable modules.
+### 1. Deploy Plane
+Follow the [official self-hosting guide](https://developers.plane.so/self-hosting/methods/docker-compose), then replace the `makeplane/*` images in your `docker-compose.yml` with the images above.
 
-- **Views**
-  Customize your workflow by creating filters to display only the most relevant issues. Save and share these views with ease.
+### 2. Configure OIDC
+Go to `https://your-plane-domain/god-mode/authentication/oidc/` and fill in:
 
-- **Pages**
-  Capture and organize ideas using Plane Pages, complete with AI capabilities and a rich text editor. Format text, insert images, add hyperlinks, or convert your notes into actionable items.
+| Field | Description |
+|---|---|
+| Discovery URL | Your provider's `.well-known/openid-configuration` URL |
+| Client ID | From your OIDC provider |
+| Client Secret | From your OIDC provider |
+| Display Name | Label on the login button (e.g. `SSO`, `Authentik`, `Nextcloud`) |
+| Icon URL | Optional — URL to a custom icon for the login button |
 
-- **Analytics**
-  Access real-time insights across all your Plane data. Visualize trends, remove blockers, and keep your projects moving forward.
+Enable the toggle and save. Then register the callback URL with your OIDC provider:
+```
+https://your-plane-domain/auth/oidc/callback/
+```
 
-## 🛠️ Local development
+### 3. NAT hairpinning (self-hosted OIDC providers)
+If your OIDC provider is on the same local network as Plane, add `extra_hosts` to all backend services in `docker-compose.yml`:
+```yaml
+    extra_hosts:
+      - "your-oidc-domain.com:your-server-ip"
+```
 
-See [CONTRIBUTING](./CONTRIBUTING.md)
+---
 
-## ⚙️ Built with
+## ✅ Tested with
+- Nextcloud (with OIDC provider app)
+- Authentik
 
-[![React Router](https://img.shields.io/badge/-React%20Router-CA4245?logo=react-router&style=for-the-badge&logoColor=white)](https://reactrouter.com/)
-[![Django](https://img.shields.io/badge/Django-092E20?style=for-the-badge&logo=django&logoColor=green)](https://www.djangoproject.com/)
-[![Node JS](https://img.shields.io/badge/node.js-339933?style=for-the-badge&logo=Node.js&logoColor=white)](https://nodejs.org/en)
+---
 
-## 📸 Screenshots
+## 🔄 Keeping up to date with upstream
 
-  <p>
-    <a href="https://plane.so" target="_blank">
-      <img
-        src="https://media.docs.plane.so/GitHub-readme/github-work-items.webp"
-        alt="Plane Views"
-        width="100%"
-      />
-    </a>
-  </p>
-  <p>
-    <a href="https://plane.so" target="_blank">
-      <img
-        src="https://media.docs.plane.so/GitHub-readme/github-cycles.webp"
-        width="100%"
-      />
-    </a>
-  </p>
-  <p>
-    <a href="https://plane.so" target="_blank">
-      <img
-        src="https://media.docs.plane.so/GitHub-readme/github-modules.webp"
-        alt="Plane Cycles and Modules"
-        width="100%"
-      />
-    </a>
-  </p>
-  <p>
-    <a href="https://plane.so" target="_blank">
-      <img
-        src="https://media.docs.plane.so/GitHub-readme/github-views.webp"
-        alt="Plane Analytics"
-        width="100%"
-      />
-    </a>
-  </p>
-   <p>
-    <a href="https://plane.so" target="_blank">
-      <img
-        src="https://media.docs.plane.so/GitHub-readme/github-analytics.webp"
-        alt="Plane Pages"
-        width="100%"
-      />
-    </a>
-  </p>
-</p>
+```bash
+git remote add upstream https://github.com/makeplane/plane.git
+git fetch upstream
+git merge upstream/preview
+git push origin preview
+```
 
-## 📝 Documentation
+---
 
-Explore Plane's [product documentation](https://docs.plane.so/) and [developer documentation](https://developers.plane.so/) to learn about features, setup, and usage.
+## 📄 License
 
-## ❤️ Community
-
-Join the Plane community on [GitHub Discussions](https://github.com/orgs/makeplane/discussions) and our [Forum](https://forum.plane.so). We follow a [Code of conduct](https://github.com/makeplane/plane/blob/master/CODE_OF_CONDUCT.md) in all our community channels.
-
-Feel free to ask questions, report bugs, participate in discussions, share ideas, request features, or showcase your projects. We’d love to hear from you!
-
-## 🛡️ Security
-
-If you discover a security vulnerability in Plane, please report it responsibly instead of opening a public issue. We take all legitimate reports seriously and will investigate them promptly. See [Security policy](https://github.com/makeplane/plane/blob/master/SECURITY.md) for more info.
-
-To disclose any security issues, please email us at security@plane.so.
-
-## 🤝 Contributing
-
-There are many ways you can contribute to Plane:
-
-- Report [bugs](https://github.com/makeplane/plane/issues/new?assignees=srinivaspendem%2Cpushya22&labels=%F0%9F%90%9Bbug&projects=&template=--bug-report.yaml&title=%5Bbug%5D%3A+) or submit [feature requests](https://github.com/makeplane/plane/issues/new?assignees=srinivaspendem%2Cpushya22&labels=%E2%9C%A8feature&projects=&template=--feature-request.yaml&title=%5Bfeature%5D%3A+).
-- Review the [documentation](https://docs.plane.so/) and submit [pull requests](https://github.com/makeplane/docs) to improve it—whether it's fixing typos or adding new content.
-- Talk or write about Plane or any other ecosystem integration and [let us know](https://forum.plane.so)!
-- Show your support by upvoting [popular feature requests](https://github.com/makeplane/plane/issues).
-
-Please read [CONTRIBUTING.md](https://github.com/makeplane/plane/blob/master/CONTRIBUTING.md) for details on the process for submitting pull requests to us.
-
-### Repo activity
-
-![Plane Repo Activity](https://repobeats.axiom.co/api/embed/2523c6ed2f77c082b7908c33e2ab208981d76c39.svg "Repobeats analytics image")
-
-### We couldn't have done this without you.
-
-<a href="https://github.com/makeplane/plane/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=makeplane/plane" />
-</a>
-
-## License
-
-This project is licensed under the [GNU Affero General Public License v3.0](https://github.com/makeplane/plane/blob/master/LICENSE.txt).
+[GNU Affero General Public License v3.0](https://github.com/makeplane/plane/blob/master/LICENSE.txt)

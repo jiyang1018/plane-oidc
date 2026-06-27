@@ -39,6 +39,7 @@ export const GeneralConfigurationForm = observer(function GeneralConfigurationFo
     },
   });
 
+
   const onSubmit = async (formData: Partial<IInstance>) => {
     const payload: Partial<IInstance> = { ...formData };
 

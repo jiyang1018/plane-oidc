@@ -99,6 +99,35 @@ class Adapter:
             )
         return
 
+    def __auto_join_default_workspace(self, user):
+        try:
+            from plane.db.models import Workspace, WorkspaceMember
+            from plane.license.utils.instance_value import get_configuration_value
+            (DEFAULT_WORKSPACE_SLUGS,) = get_configuration_value([
+                {"key": "DEFAULT_WORKSPACE_SLUGS", "default": ""}
+            ])
+            if not DEFAULT_WORKSPACE_SLUGS:
+                return
+            (DEFAULT_USER_ROLE,) = get_configuration_value([
+                {"key": "DEFAULT_USER_ROLE", "default": ""}
+            ])
+            role = int(DEFAULT_USER_ROLE) if DEFAULT_USER_ROLE and DEFAULT_USER_ROLE.isdigit() else None
+            if role is None:
+                return
+            slugs = [s.strip() for s in DEFAULT_WORKSPACE_SLUGS.split(",") if s.strip()]
+            for slug in slugs:
+                workspace = Workspace.objects.filter(slug=slug).first()
+                if not workspace:
+                    continue
+                if not WorkspaceMember.objects.filter(workspace=workspace, member=user).exists():
+                    WorkspaceMember.objects.create(
+                        workspace=workspace,
+                        member=user,
+                        role=role,
+                    )
+        except Exception:
+            pass
+
     def __check_signup(self, email):
         """Check if sign up is enabled or not and raise exception if not enabled"""
 
@@ -108,7 +137,7 @@ class Adapter:
         ])
 
         # Check if sign up is disabled and invite is present or not
-        if ENABLE_SIGNUP == "0" and not WorkspaceMemberInvite.objects.filter(email=email).exists():
+        if ENABLE_SIGNUP == "0" and not WorkspaceMemberInvite.objects.filter(email=email).exists() and self.provider != "oidc":
             self.logger.warning("Sign up is disabled and invite is not present")
             # Raise exception
             raise AuthenticationException(
@@ -390,6 +419,8 @@ class Adapter:
         # Create or update account if token data is present
         if self.token_data:
             self.create_update_account(user=user)
-
+        # Auto-join default workspace for new OIDC users
+        if is_signup and self.provider == "oidc":
+            self.__auto_join_default_workspace(user=user)
         # Return user
         return user
