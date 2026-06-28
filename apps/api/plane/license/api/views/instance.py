@@ -239,6 +239,38 @@ class InstanceUsersEndpoint(BaseAPIView):
         )
         return Response({"results": list(users)}, status=status.HTTP_200_OK)
 
+    def post(self, request):
+        from plane.db.models import User
+        import uuid
+        email = request.data.get("email", "").strip().lower()
+        first_name = request.data.get("first_name", "").strip()
+        last_name = request.data.get("last_name", "").strip()
+        password = request.data.get("password", "").strip()
+        if not email or not password or not first_name:
+            return Response(
+                {"error": "email, first_name and password are required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        if User.objects.filter(email=email).exists():
+            return Response(
+                {"error": "User with this email already exists"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        user = User(
+            email=email,
+            first_name=first_name,
+            last_name=last_name,
+            username=uuid.uuid4().hex,
+            is_active=True,
+            is_email_verified=True,
+        )
+        user.set_password(password)
+        user.save()
+        return Response(
+            {"id": str(user.id), "email": user.email},
+            status=status.HTTP_201_CREATED
+        )
+
     def patch(self, request, pk):
         from plane.db.models import User
         user = User.objects.get(pk=pk)
